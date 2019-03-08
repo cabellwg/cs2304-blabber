@@ -1,0 +1,16 @@
+version: "3.7"
+
+services:
+  app:
+    build: .
+    restart: always
+    ports:
+      - 80:80
+  db:
+    image: postgres:alpine
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
