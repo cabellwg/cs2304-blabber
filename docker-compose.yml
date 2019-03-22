@@ -6,11 +6,11 @@ services:
     restart: always
     ports:
       - 80:80
-  db:
+  blab_db:
     image: postgres:alpine
     restart: always
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - blab-db-data:/var/lib/postgresql/data
 
 volumes:
-  db-data:
+  blab-db-data:
