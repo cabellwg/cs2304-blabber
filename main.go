@@ -4,8 +4,10 @@ import (
   "fmt"
   "time"
   "log"
+  "strconv"
 
   "crypto/sha256"
+  "encoding/binary"
 
   "encoding/json"
   "net/http"
@@ -16,14 +18,14 @@ import (
 // Types
 
 type User struct {
-  Id [32]byte
+  Id uint32
   Name string
   Email string
 }
 
 type Blab struct {
-  Id [32]byte
-  PostTime int64
+  Id uint32
+  PostTime time.Time
   Author User
   Message string
 }
@@ -31,17 +33,24 @@ type Blab struct {
 // Entrypoint
 
 func main() {
+  time.Sleep(200000000) // 2s, for db startup
+
   DbConnect()
 
   router := httprouter.New()
+  router.GET("/", HelloWorld)
   router.DELETE("/blabs/:id", RemoveBlab)
   router.GET("/blabs", GetBlabs)
   router.POST("/blabs", AddBlab)
 
-  log.Fatal(http.ListenAndServe(":5000", nil))
+  log.Fatal(http.ListenAndServe(":5000", router))
 }
 
 // Functions
+
+func HelloWorld(w http.ResponseWriter, r *http.Request, ps httprouter.Params)  {
+  fmt.Fprintf(w, "Hello, world!\n")
+}
 
 func RemoveBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
   rowsRemoved := DbRemove(ps.ByName("id"))
@@ -55,10 +64,22 @@ func RemoveBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 func GetBlabs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-  blabs := DbBlabs()
+  keys, ok := r.URL.Query()["createdSince"]
+
+  if !ok {
+    keys = []string{"0"}
+  }
+
+  sinceInt, err := strconv.ParseInt(keys[0], 10, 64)
+  if err != nil {
+    panic(err)
+  }
+  since := time.Unix(sinceInt, 0)
+  blabs := DbBlabs(since)
 
   b, err := json.Marshal(blabs)
   if err != nil {
+    fmt.Printf("Could not parse blab into json")
     panic(err)
   }
 
@@ -73,11 +94,13 @@ func AddBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
       panic(err)
   }
 
-  postTime := time.Now().Unix()
-  blab.PostTime = postTime
+  blab.PostTime = time.Now()
 
-  blab.Id = sha256.Sum256([]byte(fmt.Sprintf("%v", blab)))
-  blab.Author.Id = sha256.Sum256([]byte(fmt.Sprintf("%v", blab.Author)))
+  blabHash := sha256.Sum256([]byte(fmt.Sprintf("%v", blab)))
+  blab.Id = binary.BigEndian.Uint32(blabHash[:]) >> 1
+
+  authorHash := sha256.Sum256([]byte(fmt.Sprintf("%v", blab.Author)))
+  blab.Author.Id = binary.BigEndian.Uint32(authorHash[:]) >> 1
 
   DbInsertBlab(blab)
 

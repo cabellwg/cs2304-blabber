@@ -4,9 +4,10 @@ import (
   "container/list"
 
   "fmt"
+  "time"
   "database/sql"
 
-  _ "github.com/lib/pq"
+  "github.com/lib/pq"
 )
 
 
@@ -40,29 +41,43 @@ func DbConnect()  {
 
 
 func DbInsertUser(user User)  {
-  addUserStatement := `INSERT INTO users (id, name, email) VALUES ($1, $2, $3) ON CONFLICT NO ACTION`
+  addUserStatement := `INSERT INTO users (id, name, email) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`
 
   db.QueryRow(addUserStatement, user.Id, user.Name, user.Email)
 }
 
 
 func DbInsertBlab(blab Blab)  {
-  addUserStatement := `INSERT INTO users (id, name, email) VALUES ($1, $2, $3) ON CONFLICT NO ACTION`
+  addUserStatement := `INSERT INTO users (id, name, email) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`
   addBlabStatement := `INSERT INTO blabs (id, postTime, author, message) VALUES ($1, $2, $3, $4)`
 
-  db.QueryRow(addUserStatement, blab.Author.Id, blab.Author.Name, blab.Author.Email)
-  db.QueryRow(addBlabStatement, blab.Id, blab.PostTime, blab.Author.Id, blab.Message)
+  _, err := db.Exec(addUserStatement,
+    blab.Author.Id,
+    blab.Author.Name,
+    blab.Author.Email)
+  if err != nil {
+    panic(err)
+  }
+
+  _, err = db.Exec(addBlabStatement,
+    blab.Id,
+    pq.FormatTimestamp(blab.PostTime),
+    blab.Author.Id,
+    blab.Message)
+  if err != nil {
+    panic(err)
+  }
 }
 
 
-func DbBlabs() *list.List  {
+func DbBlabs(createdSince time.Time) *list.List  {
   blabs := list.New()
 
-  queryStatement := "SELECT blabs.id, blabs.postTime, users.name, users.email, blabs.message FROM blabs LEFT JOIN users ON blabs.author = users.id"
+  queryStatement := "SELECT blabs.id, blabs.postTime, users.name, users.email, blabs.message FROM blabs LEFT JOIN users ON blabs.author = users.id WHERE blabs.postTime > $1"
 
-  rows, err := db.Query(queryStatement)
+  rows, err := db.Query(queryStatement, pq.FormatTimestamp(createdSince))
   if err != nil {
-    // TODO: handle this error better than this
+    fmt.Printf("Get query failed")
     panic(err)
   }
 
@@ -70,14 +85,20 @@ func DbBlabs() *list.List  {
   for rows.Next() {
     var blab Blab
     var author User
+    var pgTimeString string
     err = rows.Scan(&blab.Id,
-      &blab.PostTime,
+      &pgTimeString,
       &author.Name,
       &author.Email,
       &blab.Message)
-
     if err != nil {
-      // TODO: handle this error
+      fmt.Printf("Could not parse row into blab")
+      panic(err)
+    }
+
+    blab.PostTime, err = pq.ParseTimestamp(time.FixedZone("UTC-8", 0), pgTimeString)
+    if err != nil {
+      fmt.Printf("Could not parse timestamp")
       panic(err)
     }
 
@@ -95,7 +116,7 @@ func DbBlabs() *list.List  {
 }
 
 
-func DbRemove(id string) int64 {
+func DbRemove(id string) int {
   removeStatement := `DELETE FROM blabs WHERE id=$1`
   res, err := db.Exec(removeStatement, id)
   if err != nil {
@@ -107,5 +128,5 @@ func DbRemove(id string) int64 {
     panic(err)
   }
 
-  return rowsRemoved
+  return int(rowsRemoved)
 }

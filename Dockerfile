@@ -6,7 +6,7 @@ COPY . .
 
 RUN apk add git
 
-RUN go get -d -v
+RUN go get -d -v ./...
 RUN go install -v
 
 # Production stage

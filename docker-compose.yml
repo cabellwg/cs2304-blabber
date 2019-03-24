@@ -5,7 +5,7 @@ services:
     build: .
     restart: always
     ports:
-      - 80:80
+      - 5000:5000
   blab_db:
     image: postgres:alpine
     restart: always
