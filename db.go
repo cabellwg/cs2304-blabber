@@ -96,6 +96,7 @@ func DbBlabs(createdSince time.Time) *list.List  {
       panic(err)
     }
 
+    fmt.Printf(pgTimeString)
     blab.PostTime, err = pq.ParseTimestamp(time.FixedZone("UTC-8", 0), pgTimeString)
     if err != nil {
       fmt.Printf("Could not parse timestamp")

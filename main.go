@@ -56,11 +56,13 @@ func RemoveBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
   rowsRemoved := DbRemove(ps.ByName("id"))
 
   if rowsRemoved == 0 {
-    fmt.Fprintf(w, http.StatusText(404))
+    w.WriteHeader(http.StatusNotFound)
+    fmt.Fprintf(w, "Blab not found")
     return
   }
 
-  fmt.Fprintf(w, http.StatusText(200))
+  w.WriteHeader(http.StatusOK)
+  fmt.Fprintf(w, "Blab deleted successfully")
 }
 
 func GetBlabs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -83,6 +85,7 @@ func GetBlabs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
     panic(err)
   }
 
+  w.WriteHeader(http.StatusOK)
   fmt.Fprintf(w, string(b))
 }
 
@@ -104,5 +107,12 @@ func AddBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
   DbInsertBlab(blab)
 
-  fmt.Fprintf(w, http.StatusText(201))
+  b, err := json.Marshal(blab)
+  if err != nil {
+    fmt.Printf("Could not parse blab into json")
+    panic(err)
+  }
+
+  w.WriteHeader(http.StatusCreated)
+  fmt.Fprintf(w, string(b))
 }
