@@ -2,15 +2,13 @@ version: "3.7"
 
 services:
   app:
-    build: .
+    build: ./app
     restart: always
     ports:
       - 5000:5000
   blab_db:
-    image: postgres:alpine
+    build: ./db
     restart: always
-    volumes:
-      - blab-db-data:/var/lib/postgresql/data
 
 volumes:
   blab-db-data:

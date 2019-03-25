@@ -17,7 +17,7 @@ const (
   port = 5432
   user = "blabclient"
   password = "r$J89ka&36"
-  dbname = "blabs"
+  dbname = "blabdb"
 )
 
 // TODO: implement with method handlers instead
