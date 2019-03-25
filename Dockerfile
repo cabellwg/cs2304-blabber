@@ -1,10 +1,10 @@
 # Build stage
 FROM golang:alpine3.9 AS build
 
+RUN apk add git
+
 WORKDIR /go/src/app
 COPY . .
-
-RUN apk add git
 
 RUN go get -d -v ./...
 RUN go install -v

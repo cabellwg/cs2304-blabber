@@ -81,7 +81,7 @@ func GetBlabs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
   b, err := json.Marshal(blabs)
   if err != nil {
-    fmt.Printf("Could not parse blab into json")
+    log.Println("Could not parse blab into json\n")
     panic(err)
   }
 
@@ -109,7 +109,7 @@ func AddBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
   b, err := json.Marshal(blab)
   if err != nil {
-    fmt.Printf("Could not parse blab into json")
+    log.Println("Could not parse blab into json\n")
     panic(err)
   }
 

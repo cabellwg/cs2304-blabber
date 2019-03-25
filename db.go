@@ -1,9 +1,8 @@
 package main
 
 import (
-  "container/list"
-
   "fmt"
+  "log"
   "time"
   "database/sql"
 
@@ -70,14 +69,16 @@ func DbInsertBlab(blab Blab)  {
 }
 
 
-func DbBlabs(createdSince time.Time) *list.List  {
-  blabs := list.New()
+func DbBlabs(createdSince time.Time) []Blab  {
+  var blabs []Blab
 
-  queryStatement := "SELECT blabs.id, blabs.postTime, users.name, users.email, blabs.message FROM blabs LEFT JOIN users ON blabs.author = users.id WHERE blabs.postTime > $1"
+  goDateFormat := "2006-01-02T15:04:05Z"
+  postgresDateFormat := "yyyy-mm-ddThh:mm:ssZ"
+  queryStatement := `SELECT blabs.id, blabs.postTime, TO_CHAR(blabs.postTime :: timestamp, $1), users.name, users.email, blabs.message FROM blabs LEFT JOIN users ON blabs.author = users.id WHERE blabs.postTime > $2`
 
-  rows, err := db.Query(queryStatement, pq.FormatTimestamp(createdSince))
+  rows, err := db.Query(queryStatement, postgresDateFormat, pq.FormatTimestamp(createdSince))
   if err != nil {
-    fmt.Printf("Get query failed")
+    log.Println("Get query failed\n")
     panic(err)
   }
 
@@ -86,26 +87,28 @@ func DbBlabs(createdSince time.Time) *list.List  {
     var blab Blab
     var author User
     var pgTimeString string
+    var timestamp string
     err = rows.Scan(&blab.Id,
       &pgTimeString,
+      &timestamp,
       &author.Name,
       &author.Email,
       &blab.Message)
+
     if err != nil {
-      fmt.Printf("Could not parse row into blab")
+      log.Println("Could not parse row into blab\n")
       panic(err)
     }
 
-    fmt.Printf(pgTimeString)
-    blab.PostTime, err = pq.ParseTimestamp(time.FixedZone("UTC-8", 0), pgTimeString)
+    blab.PostTime, err = time.Parse(goDateFormat, timestamp)
+
     if err != nil {
-      fmt.Printf("Could not parse timestamp")
       panic(err)
     }
 
     blab.Author = author
 
-    blabs.PushBack(blab)
+    blabs = append(blabs, blab)
   }
   // get any error encountered during iteration
   err = rows.Err()
