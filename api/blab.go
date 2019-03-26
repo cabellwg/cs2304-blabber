@@ -25,7 +25,7 @@ type Blab struct {
 func (blab Blab) MarshalJSON() ([]byte, error) {
 	defaultBlab := struct {
     Id uint32 `json:"id"`
-    PostTime int64 `json:"postTime"`
+    PostTime int64 `json:"postDate"`
     Author User `json:"author"`
     Message string `json:"message"`
 	}{
