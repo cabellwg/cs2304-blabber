@@ -43,7 +43,7 @@ func main() {
   router.GET("/blabs", GetBlabs)
   router.POST("/blabs", AddBlab)
 
-  log.Fatal(http.ListenAndServe(":5000", router))
+  log.Fatal(http.ListenAndServe(":80", router))
 }
 
 // Functions

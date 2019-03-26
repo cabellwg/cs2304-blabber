@@ -5,8 +5,8 @@ services:
     image: traefik
     command: --api --docker
     ports:
-      - "80:80"
-      - "8080:8080"
+      - 80:80
+      - 8080:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   blab_db:
@@ -15,6 +15,10 @@ services:
     volumes:
       - blab-db-data:/var/lib/postgresql/data
   api:
+    labels:
+      traefik.port: 80
+      traefik.frontend.rule: "PathPrefixStrip:/api; Host:localhost"
+      traefik.backend: "api"
     build:
       context: ./api
       target: ${MODE}
@@ -23,9 +27,9 @@ services:
     volumes:
       - ./api:/go/src/api
     restart: always
-    ports:
-      - 5000:5000
   client:
+    labels:
+      traefik.frontend.rule: "Host:localhost"
     image: vtcs2304s19/blabber-client
 
 
