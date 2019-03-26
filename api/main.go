@@ -15,20 +15,6 @@ import (
   "github.com/julienschmidt/httprouter"
 )
 
-// Types
-
-type User struct {
-  Id uint32
-  Name string
-  Email string
-}
-
-type Blab struct {
-  Id uint32
-  PostTime time.Time
-  Author User
-  Message string
-}
 
 // Entrypoint
 
