@@ -13,3 +13,6 @@
 
 # Fresh build directory
 tmp/
+
+# docker-compose environment
+.env
