@@ -1,38 +1,37 @@
 package main
 
 import (
-  "encoding/json"
-  "time"
+	"encoding/json"
+	"time"
 )
 
-// User
-
+// User stores info about a user
 type User struct {
-  Id uint32 `json:"id"`
-  Name string `json:"name"`
-  Email string `json:"email"`
+	ID    uint32 `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
-// Blab
-
+// Blab stores a blab and its details
 type Blab struct {
-  Id uint32 `json:"id"`
-  PostTime time.Time `json:"postTime"`
-  Author User `json:"author"`
-  Message string `json:"message"`
+	ID       uint32    `json:"id"`
+	PostTime time.Time `json:"postTime"`
+	Author   User      `json:"author"`
+	Message  string    `json:"message"`
 }
 
+// MarshalJSON converts a Blab into JSON
 func (blab Blab) MarshalJSON() ([]byte, error) {
 	defaultBlab := struct {
-    Id uint32 `json:"id"`
-    PostTime int64 `json:"postTime"`
-    Author User `json:"author"`
-    Message string `json:"message"`
+		ID       uint32 `json:"id"`
+		PostTime int64  `json:"postTime"`
+		Author   User   `json:"author"`
+		Message  string `json:"message"`
 	}{
-		Id: blab.Id,
-    PostTime: blab.PostTime.Unix(),
-		Author: blab.Author,
-		Message: blab.Message,
+		ID:       blab.ID,
+		PostTime: blab.PostTime.Unix(),
+		Author:   blab.Author,
+		Message:  blab.Message,
 	}
 
 	return json.Marshal(defaultBlab)
