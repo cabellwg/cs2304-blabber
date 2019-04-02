@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"strconv"
 	"time"
 )
 
@@ -20,15 +21,28 @@ type Blab struct {
 	Message  string    `json:"message"`
 }
 
+// MarshalJSON converts a User into JSON
+func (user User) MarshalJSON() ([]byte, error) {
+	defaultBlab := struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}{
+		Name:  user.Name,
+		Email: user.Email,
+	}
+
+	return json.Marshal(defaultBlab)
+}
+
 // MarshalJSON converts a Blab into JSON
 func (blab Blab) MarshalJSON() ([]byte, error) {
 	defaultBlab := struct {
-		ID       uint32 `json:"id"`
+		ID       string `json:"id"`
 		PostTime int64  `json:"postTime"`
 		Author   User   `json:"author"`
 		Message  string `json:"message"`
 	}{
-		ID:       blab.ID,
+		ID:       strconv.FormatUint(uint64(blab.ID), 10),
 		PostTime: blab.PostTime.Unix(),
 		Author:   blab.Author,
 		Message:  blab.Message,

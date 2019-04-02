@@ -31,6 +31,11 @@ services:
     labels:
       traefik.frontend.rule: "Host:localhost"
     image: vtcs2304s19/blabber-client
+  tests:
+    image: vtcs2304s19/blabber-api-tests
+    environment:
+      SERVICE_NAME: api
+    restart: "always"
 
 
 volumes:

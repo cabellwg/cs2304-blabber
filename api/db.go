@@ -62,7 +62,7 @@ func DbInsertBlab(blab Blab) {
 
 // DbBlabs returns all blabs in the database created at or after the given time
 func DbBlabs(createdSince time.Time) []Blab {
-	var blabs []Blab
+	blabs := make([]Blab, 0)
 
 	goDateFormat := "2006-01-02T15:04:05Z"
 	postgresDateFormat := "yyyy-mm-ddThh:mm:ssZ"
@@ -112,7 +112,7 @@ func DbBlabs(createdSince time.Time) []Blab {
 }
 
 // DbRemove removes a blab from the database by its ID
-func DbRemove(id string) int {
+func DbRemove(id uint32) int {
 	removeStatement := `DELETE FROM blabs WHERE id=$1`
 	res, err := db.Exec(removeStatement, id)
 	if err != nil {

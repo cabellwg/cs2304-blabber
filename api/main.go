@@ -25,7 +25,7 @@ func main() {
 	router := httprouter.New()
 	router.GET("/", helloWorld)
 	router.DELETE("/blabs/:id", removeBlab)
-	router.GET("/blabs", getBlab)
+	router.GET("/blabs", getBlabs)
 	router.POST("/blabs", addBlab)
 
 	log.Fatal(http.ListenAndServe(":80", router))
@@ -34,11 +34,18 @@ func main() {
 // Functions
 
 func helloWorld(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "Hello, world!\n")
+	w.Write([]byte("Hello, world!"))
 }
 
 func removeBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	rowsRemoved := DbRemove(ps.ByName("id"))
+	id, err := strconv.ParseUint(ps.ByName("id"), 10, 32)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Invalid ID"))
+		return
+	}
+
+	rowsRemoved := DbRemove(uint32(id))
 
 	if rowsRemoved == 0 {
 		w.WriteHeader(http.StatusNotFound)
@@ -47,19 +54,28 @@ func removeBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Blab deleted successfully")
+	w.Write([]byte("Blab deleted successfully"))
 }
 
-func getBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func getBlabs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	for k, v := range r.URL.Query() {
+		fmt.Println("k:", k, "v:", v)
+	}
 	keys, ok := r.URL.Query()["createdSince"]
 
 	if !ok {
 		keys = []string{"0"}
 	}
 
+	log.Println(keys)
+
 	sinceInt, err := strconv.ParseInt(keys[0], 10, 64)
 	if err != nil {
-		panic(err)
+		log.Printf("Unrecognized timestamp: %s\n", keys[0])
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("[]"))
+		return
 	}
 	since := time.Unix(sinceInt, 0)
 	blabs := DbBlabs(since)
@@ -70,11 +86,13 @@ func getBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		panic(err)
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, string(b))
+	w.Write(b)
 }
 
 func addBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	log.Println(ps)
 	decoder := json.NewDecoder(r.Body)
 	var blab Blab
 	err := decoder.Decode(&blab)
@@ -98,6 +116,7 @@ func addBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		panic(err)
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, string(b))
+	w.Write(b)
 }
