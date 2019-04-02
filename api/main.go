@@ -58,16 +58,11 @@ func removeBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 func getBlabs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	for k, v := range r.URL.Query() {
-		fmt.Println("k:", k, "v:", v)
-	}
 	keys, ok := r.URL.Query()["createdSince"]
 
 	if !ok {
 		keys = []string{"0"}
 	}
-
-	log.Println(keys)
 
 	sinceInt, err := strconv.ParseInt(keys[0], 10, 64)
 	if err != nil {
@@ -92,7 +87,6 @@ func getBlabs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 func addBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	log.Println(ps)
 	decoder := json.NewDecoder(r.Body)
 	var blab Blab
 	err := decoder.Decode(&blab)
