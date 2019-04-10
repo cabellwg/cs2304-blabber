@@ -28,6 +28,8 @@ services:
     restart: always
   client:
     deploy:
+      labels:
+        traefik.frontend.rule: "Path:/"
       replicas: 2
     image: vtcs2304s19/blabber-client
 
