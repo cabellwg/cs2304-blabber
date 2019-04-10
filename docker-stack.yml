@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+  reverse-proxy:
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    image: traefik
+    command: --api --docker
+    ports:
+      - 80:80
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  blab_db:
+    image: cabellwg/blabber-db
+    restart: always
+    volumes:
+      - blab-db-data:/var/lib/postgresql/data
+  api:
+    deploy:
+      labels:
+        traefik.port: 80
+        traefik.frontend.rule: "PathPrefixStrip:/api"
+        traefik.backend: "api"
+      replicas: 2
+    image: cabellwg/blabber-api
+    restart: always
+  client:
+    deploy:
+      replicas: 2
+    image: vtcs2304s19/blabber-client
+  tests:
+    image: vtcs2304s19/blabber-api-tests
+    environment:
+      SERVICE_NAME: api
+    restart: "always"
+
+
+volumes:
+  blab-db-data:
