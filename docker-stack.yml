@@ -13,6 +13,9 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   blab_db:
+    deploy:
+      labels:
+        traefik.backend: "db"
     image: cabellwg/blabber-db
     restart: always
     volumes:
