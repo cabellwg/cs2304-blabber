@@ -6,7 +6,7 @@ services:
       placement:
         constraints: [node.role == manager]
     image: traefik
-    command: --api --docker
+    command: --api --docker --docker.swarmMode
     ports:
       - 80:80
       - 8080:8080
@@ -30,11 +30,6 @@ services:
     deploy:
       replicas: 2
     image: vtcs2304s19/blabber-client
-  tests:
-    image: vtcs2304s19/blabber-api-tests
-    environment:
-      SERVICE_NAME: api
-    restart: "always"
 
 
 volumes:
