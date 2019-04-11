@@ -3,25 +3,17 @@ version: "3.7"
 services:
   reverse-proxy:
     deploy:
-      labels:
-        traefik.docker.network: "traefik"
       placement:
         constraints:
           - node.role == manager
     image: traefik
-    command: >
-      --api
-      --docker
-      --docker.swarmMode
-      --docker.watch
-      --docker.exposedByDefault=true
+    command: --docker --docker.swarmMode --docker.watch --api
     ports:
       - 80:80
       - 8080:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - host
       - traefik
   blab_db:
     image: cabellwg/blabber-db
@@ -39,7 +31,7 @@ services:
     deploy:
       labels:
         traefik.port: 80
-        traefik.frontend.rule: "PathPrefixStrip:/api; Host:api.docker.localhost"
+        traefik.frontend.rule: "PathPrefixStrip:/api"
         traefik.backend: "api"
         traefik.docker.network: "traefik"
       replicas: 2
@@ -53,7 +45,7 @@ services:
       labels:
         traefik.port: 80
         traefik.docker.network: "traefik"
-        traefik.frontend.rule: "PathPrefix:/; Host:client.docker.localhost"
+        traefik.frontend.rule: "PathPrefix:/"
       replicas: 2
     networks:
       - traefik
