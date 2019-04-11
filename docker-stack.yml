@@ -3,6 +3,8 @@ version: "3.7"
 services:
   reverse-proxy:
     deploy:
+      labels:
+        traefik.docker.network: "traefik"
       placement:
         constraints:
           - node.role == manager
@@ -18,32 +20,46 @@ services:
       - 8080:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - host
+      - traefik
   blab_db:
+    image: cabellwg/blabber-db
     deploy:
       labels:
         traefik.port: 5432
         traefik.backend: "db"
-    image: cabellwg/blabber-db
+        traefik.docker.network: "traefik"
     volumes:
       - blab-db-data:/var/lib/postgresql/data
+    networks:
+      - traefik
   api:
+    image: cabellwg/blabber-api
     deploy:
       labels:
         traefik.port: 80
-        traefik.frontend.rule: "PathPrefixStrip:/api; Host:front.docker.localhost"
+        traefik.frontend.rule: "PathPrefixStrip:/api; Host:api.docker.localhost"
         traefik.backend: "api"
+        traefik.docker.network: "traefik"
       replicas: 2
       restart_policy:
         condition: on-failure
-    image: cabellwg/blabber-api
+    networks:
+      - traefik
   client:
+    image: vtcs2304s19/blabber-client
     deploy:
       labels:
         traefik.port: 80
-        traefik.frontend.rule: "PathPrefix:/; Host:front.docker.localhost"
+        traefik.docker.network: "traefik"
+        traefik.frontend.rule: "PathPrefix:/; Host:client.docker.localhost"
       replicas: 2
-    image: vtcs2304s19/blabber-client
-
+    networks:
+      - traefik
 
 volumes:
   blab-db-data:
+
+networks:
+  traefik:
