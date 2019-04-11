@@ -4,9 +4,15 @@ services:
   reverse-proxy:
     deploy:
       placement:
-        constraints: [node.role == manager]
+        constraints:
+          - node.role == manager
     image: traefik
-    command: --api --docker --docker.swarmMode
+    command: >
+      --api
+      --docker
+      --docker.swarmMode
+      --docker.watch
+      --docker.exposedbydefault=true
     ports:
       - 80:80
       - 8080:8080
@@ -17,7 +23,6 @@ services:
       labels:
         traefik.backend: "db"
     image: cabellwg/blabber-db
-    restart: always
     volumes:
       - blab-db-data:/var/lib/postgresql/data
   api:
@@ -27,11 +32,13 @@ services:
         traefik.frontend.rule: "PathPrefixStrip:/api"
         traefik.backend: "api"
       replicas: 2
+      restart_policy:
+        condition: on-failure
     image: cabellwg/blabber-api
-    restart: always
   client:
     deploy:
       labels:
+        traefik.port: 80
         traefik.frontend.rule: "Path:/"
       replicas: 2
     image: vtcs2304s19/blabber-client
