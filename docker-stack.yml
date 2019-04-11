@@ -12,7 +12,7 @@ services:
       --docker
       --docker.swarmMode
       --docker.watch
-      --docker.exposedbydefault=true
+      --docker.exposedByDefault=true
     ports:
       - 80:80
       - 8080:8080
@@ -21,6 +21,7 @@ services:
   blab_db:
     deploy:
       labels:
+        traefik.port: 5432
         traefik.backend: "db"
     image: cabellwg/blabber-db
     volumes:
@@ -29,7 +30,7 @@ services:
     deploy:
       labels:
         traefik.port: 80
-        traefik.frontend.rule: "PathPrefixStrip:/api"
+        traefik.frontend.rule: "PathPrefixStrip:/api; Host:front.docker.localhost"
         traefik.backend: "api"
       replicas: 2
       restart_policy:
@@ -39,7 +40,7 @@ services:
     deploy:
       labels:
         traefik.port: 80
-        traefik.frontend.rule: "Path:/"
+        traefik.frontend.rule: "PathPrefix:/; Host:front.docker.localhost"
       replicas: 2
     image: vtcs2304s19/blabber-client
 
