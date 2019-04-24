@@ -24,4 +24,7 @@ FROM alpine:3.9 AS prod
 
 COPY --from=dev /go/bin/api /usr/local/bin/
 
+RUN apk add curl
+
+HEALTHCHECK --timeout=3s CMD curl -f http://localhost/status || exit 1
 ENTRYPOINT ["api"]

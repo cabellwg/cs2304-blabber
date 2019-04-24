@@ -12,6 +12,12 @@ import (
 	"github.com/lib/pq"
 )
 
+// Types
+
+type BlabDb struct {
+	*sql.DB
+}
+
 // Globals
 
 const (
@@ -21,13 +27,10 @@ const (
 	dbname   = "blabdb"
 )
 
-// TODO: implement with method handlers instead
-var db *sql.DB
-
 // Functions
 
-// DbConnect connects to the PostgreSQL database
-func DbConnect() {
+// Connect connects to the PostgreSQL database
+func (db *BlabDb) Connect() {
 	path, err := filepath.Abs("/run/secrets/blabber-db-password")
 	if (err != nil) {
 		panic(err)
@@ -43,22 +46,29 @@ func DbConnect() {
 		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	db, err = sql.Open("postgres", psqlInfo)
+	db.DB, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
 		panic(err)
 	}
 }
 
-// DbInsertUser inserts a new user into the database
-func DbInsertUser(user User) {
+
+// Connected returns true if there is an open database connection
+func (db *BlabDb) Connected() bool {
+	return db.Ping() == nil
+}
+
+
+// InsertUser inserts a new user into the database
+func (db *BlabDb) InsertUser(user User) {
 	addUserStatement := `INSERT INTO users (id, name, email) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`
 
 	db.QueryRow(addUserStatement, user.ID, user.Name, user.Email)
 }
 
-// DbInsertBlab adds a blab to the database
-func DbInsertBlab(blab Blab) {
-	DbInsertUser(blab.Author)
+// InsertBlab adds a blab to the database
+func (db *BlabDb) InsertBlab(blab Blab) {
+	db.InsertUser(blab.Author)
 
 	addBlabStatement := `INSERT INTO blabs (id, postTime, author, message) VALUES ($1, $2, $3, $4)`
 
@@ -72,8 +82,8 @@ func DbInsertBlab(blab Blab) {
 	}
 }
 
-// DbBlabs returns all blabs in the database created at or after the given time
-func DbBlabs(createdSince time.Time) []Blab {
+// Blabs returns all blabs in the database created at or after the given time
+func (db *BlabDb) Blabs(createdSince time.Time) []Blab {
 	blabs := make([]Blab, 0)
 
 	goDateFormat := "2006-01-02T15:04:05Z"
@@ -123,8 +133,8 @@ func DbBlabs(createdSince time.Time) []Blab {
 	return blabs
 }
 
-// DbRemove removes a blab from the database by its ID
-func DbRemove(id uint32) int {
+// Remove removes a blab from the database by its ID
+func (db *BlabDb) Remove(id uint32) int {
 	removeStatement := `DELETE FROM blabs WHERE id=$1`
 	res, err := db.Exec(removeStatement, id)
 	if err != nil {

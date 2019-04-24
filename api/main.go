@@ -15,15 +15,19 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// Constants
+var db *BlabDb
+
 // Entrypoint
 
 func main() {
 	time.Sleep(200000000) // 2s, for db startup
 
-	DbConnect()
+	db = &BlabDb{nil}
+	db.Connect()
 
 	router := httprouter.New()
-	router.GET("/", helloWorld)
+	router.GET("/status", healthCheck)
 	router.DELETE("/blabs/:id", removeBlab)
 	router.GET("/blabs", getBlabs)
 	router.POST("/blabs", addBlab)
@@ -33,8 +37,13 @@ func main() {
 
 // Functions
 
-func helloWorld(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.Write([]byte("Hello, world!"))
+func healthCheck(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	healthy := db.Connected()
+	if healthy {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	time.Sleep(500000000) // 5s, for healthcheck failure
 }
 
 func removeBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -45,7 +54,7 @@ func removeBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	rowsRemoved := DbRemove(uint32(id))
+	rowsRemoved := db.Remove(uint32(id))
 
 	if rowsRemoved == 0 {
 		w.WriteHeader(http.StatusNotFound)
@@ -73,7 +82,7 @@ func getBlabs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 	since := time.Unix(sinceInt, 0)
-	blabs := DbBlabs(since)
+	blabs := db.Blabs(since)
 
 	b, err := json.Marshal(blabs)
 	if err != nil {
@@ -102,7 +111,7 @@ func addBlab(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authorHash := sha256.Sum256([]byte(fmt.Sprintf("%v", blab.Author)))
 	blab.Author.ID = binary.BigEndian.Uint32(authorHash[:]) >> 1
 
-	DbInsertBlab(blab)
+	db.InsertBlab(blab)
 
 	b, err := json.Marshal(blab)
 	if err != nil {
