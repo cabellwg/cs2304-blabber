@@ -8,7 +8,7 @@ GRANT ALL PRIVILEGES ON DATABASE blabdb TO docker;
 
 -- Create blab user
 
-CREATE USER blabclient PASSWORD 'r$J89ka&36';
+CREATE USER blabclient PASSWORD pg_read_file("/run/secrets/blabber-db-password");
 
 
 -- Build Blab tables

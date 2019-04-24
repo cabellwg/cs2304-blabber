@@ -14,6 +14,8 @@ services:
     restart: always
     volumes:
       - blab-db-data:/var/lib/postgresql/data
+    secrets:
+      - blabber-db-password
   api:
     labels:
       traefik.port: 80
@@ -27,6 +29,8 @@ services:
     volumes:
       - ./api:/go/src/api
     restart: always
+    secrets:
+      - blabber-db-password
   client:
     labels:
       traefik.frontend.rule: "Host:localhost"
@@ -35,8 +39,11 @@ services:
     image: vtcs2304s19/blabber-api-tests
     environment:
       SERVICE_NAME: api
-    restart: "always"
-
+    restart: "on-failure"
 
 volumes:
   blab-db-data:
+
+secrets:
+  blabber-db-password:
+    file: ${DB_PASSWORD_FILE}

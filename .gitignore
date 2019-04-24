@@ -16,3 +16,6 @@ tmp/
 
 # docker-compose environment
 .env
+
+# Secrets
+db-passwd.txt

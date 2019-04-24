@@ -6,6 +6,9 @@ import (
 	"log"
 	"time"
 
+	"io/ioutil"
+	"path/filepath"
+
 	"github.com/lib/pq"
 )
 
@@ -15,7 +18,6 @@ const (
 	host     = "blab_db"
 	port     = 5432
 	user     = "blabclient"
-	password = "r$J89ka&36"
 	dbname   = "blabdb"
 )
 
@@ -26,11 +28,21 @@ var db *sql.DB
 
 // DbConnect connects to the PostgreSQL database
 func DbConnect() {
+	path, err := filepath.Abs("/run/secrets/blabber-db-password")
+	if (err != nil) {
+		panic(err)
+	}
+	data, err := ioutil.ReadFile(path)
+	if (err != nil) {
+		panic(err)
+	}
+
+	password := string(data)
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	var err error
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
 		panic(err)
