@@ -18,3 +18,8 @@ MODE=[ dev | prod ]
 ```
 
 Then `docker-compose up` will run the application in the specified mode.
+
+
+### Swarm
+
+There is a file `docker-stack.yml` that specifies a run configuration for the application with [Docker Swarm](https://docs.docker.com/compose/overview/). On a manager node, run `docker stack deploy -c docker-stack.yml blabber` to deploy the stack across the swarm. 
